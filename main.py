@@ -8,7 +8,7 @@ app.include_router(advertisement.router)
 
 @app.get("/")
 def read_root():
-    return {"status": "ok", "message": "Welcome to the Marketplace API"}
+    return {"status": "ok", "message": "Welcome to the Marketplace backend app"}
 
 
 #Create a database
