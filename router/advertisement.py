@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.post('/post',response_model=AdvertisementDisplay)
+@router.post('/new',response_model=AdvertisementDisplay)
 def create_advertisement(request: AdvertisementBase,db: Session = Depends(get_db)):
     return db_advertisement.create_advertisement(db, request)
 
