@@ -22,6 +22,15 @@ def create_advertisement(db: Session , request: AdvertisementBase):
         return new_advertisement
 
 
+def get_advertisement(db: Session, id: int):
+    advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
+    if not advertisement:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'Advertisement with id {id} not found!')
+    #note if the raise get executed the rest of the code will not continue with
+    #we stop at the error handling section
+    return advertisement
+
 def update_advertisement(db: Session, id: int , request: AdvertisementBase):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id)
     if not advertisement.first():
