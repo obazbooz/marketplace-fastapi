@@ -56,7 +56,7 @@ cover/
 *.pot
 
 #database
-*.db
+marketplace-fastapi.db
 
 # Django stuff:
 *.log
