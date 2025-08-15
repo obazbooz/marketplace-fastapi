@@ -7,13 +7,14 @@ from sqlalchemy import Column
 from sqlalchemy.sql.sqltypes import Integer, String, Boolean
 from sqlalchemy.sql.schema import ForeignKey
 
+
 class DbUser(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True,index=True)
     username = Column(String)
     email = Column(String)
     password = Column(String)
-    # items = relationship('DbArticle',back_populates='user')
+    adv_posts = relationship('DbAdvertisement',back_populates='user')
 
 
 
@@ -22,7 +23,8 @@ class DbAdvertisement(Base):
     title = Column(String)
     description = Column(String)
     category = Column(String)
-    id = Column(Integer, primary_key=True,index=True)
     is_reserved = Column(Boolean)
     is_sold = Column(Boolean)
-    owner_id = Column(Integer)
+    id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer,ForeignKey('users.id'))
+    user = relationship("DbUser", back_populates='adv_posts')

@@ -1,18 +1,20 @@
-from fastapi import HTTPException,status
+from fastapi import HTTPException,status,Depends
 from sqlalchemy.orm.session import Session
 from schemas import AdvertisementBase
 from db.models import DbAdvertisement
+from schemas import UserBase
+from auth.oauth2 import get_current_user
 
 
-def create_advertisement(db: Session , request: AdvertisementBase):
+def create_advertisement(db: Session ,
+                         request: AdvertisementBase,owner_id: int):
         new_advertisement = DbAdvertisement(
             title= request.title,
             description= request.description,
             category= request.category,
-            id = request.id,
             is_reserved = request.is_reserved,
             is_sold = request.is_sold,
-            owner_id = request.owner_id
+            owner_id = owner_id
         )
         db.add(new_advertisement)
         # send operation to DB
@@ -31,13 +33,18 @@ def get_advertisement(db: Session, id: int):
     #we stop at the error handling section
     return advertisement
 
-def update_advertisement(db: Session, id: int , request: AdvertisementBase):
+def update_advertisement(db: Session, id: int , request: AdvertisementBase, current_user_id: int):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id)
+
     if not advertisement.first():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Advertisement with the ID {id} is not found'
-                            )
+            detail=f'Advertisement with the ID {id} is not found')
+
+    if advertisement.first().owner_id != current_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You are not allowed to update this advertisement")
+
     advertisement.update(
         {
             DbAdvertisement.title : request.title,
@@ -52,13 +59,19 @@ def update_advertisement(db: Session, id: int , request: AdvertisementBase):
     return "Update successful"
 
 
-def delete_advertisement(db: Session, id: int):
+def delete_advertisement(db: Session, id: int, current_user_id: int):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
     if not advertisement:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Advertisement with the ID {id} is not found'
-                            )
+            detail=f'Advertisement with the ID {id} is not found')
+
+    if advertisement.owner_id != current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to delete this advertisement"
+        )
+
     db.delete(advertisement)
     # send operation to DB
     db.commit()

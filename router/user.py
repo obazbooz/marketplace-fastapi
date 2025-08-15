@@ -13,8 +13,13 @@ router = APIRouter(
 
 
 #create user
-@router.post('/new', response_model= UserDisplay)
-def create_user(request :UserBase, db : Session = Depends(get_db)):
+@router.post('/new',
+             response_model= UserDisplay,
+             summary='Register a user',
+             description=' This API call register new user in the DB',
+             response_description='User information:ID-Username-Password'
+             )
+def create_user(request :UserBase = Depends(UserBase.as_form), db : Session = Depends(get_db)):
     return db_user.create_user(db, request)
 
 
