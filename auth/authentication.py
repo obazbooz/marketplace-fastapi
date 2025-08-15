@@ -15,7 +15,11 @@ router = APIRouter(
     tags=['authentication']
 )
 
-@router.post('/token')
+@router.post('/token',
+             summary='Authenticate user',
+             description=' This API Validates the provided username and password',
+             response_description='Access token, token type, and basic user details.'
+             )
 def get_token(
         request : OAuth2PasswordRequestForm = Depends(),
         db : Session = Depends(get_db)):

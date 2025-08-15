@@ -15,30 +15,49 @@ router = APIRouter(
 )
 
 
-@router.post('/new',response_model=AdvertisementDisplay)
-def create_advertisement(request: AdvertisementBase,
+@router.post('/new',
+             response_model=AdvertisementDisplay,
+             summary='Create an advertisement',
+             description=' This API call create a new advertisement',
+             response_description='Advertisement information'
+             )
+def create_advertisement(request: AdvertisementBase = Depends(AdvertisementBase.as_form),
                          db: Session = Depends(get_db),
                          current_user: UserBase = Depends(get_current_user)):
-    return db_advertisement.create_advertisement(db, request)
+    return db_advertisement.create_advertisement(db, request ,current_user.id)
 
-@router.get('/{id}', response_model=AdvertisementDisplay)
+
+@router.get('/{id}',
+            response_model=AdvertisementDisplay,
+            summary='View advertisement details',
+            description=' This API call view the details of a specified advertisement by ID',
+            response_description='Advertisement information'
+            )
 def get_advertisement(id: int,
                       db: Session = Depends(get_db),
                       current_user: UserBase = Depends(get_current_user)):
     return db_advertisement.get_advertisement(db,id)
 
 
-
-@router.post('/update/{id}')
+@router.put('/update/{id}',
+             summary='Update advertisement',
+             description=' This API call update a specified advertisement by ID',
+             response_description='Indicates whether the update was successfully completed.'
+             )
 def update_advertisement(id:int,
-                         request: AdvertisementBase,
+                         request: AdvertisementBase = Depends(AdvertisementBase.as_form),
                          db: Session = Depends(get_db),
                          current_user: UserBase = Depends(get_current_user)):
-    return db_advertisement.update_advertisement(db,id,request)
+    return db_advertisement.update_advertisement(db,id,request, current_user.id)
 
-@router.delete('/delete/{id}')
+
+@router.delete('/delete/{id}',
+               summary='Delete advertisement',
+               description=' This API call delete a specified advertisement by ID',
+               response_description='Indicates whether the deletion was successfully completed.'
+               )
 def delete_advertisement(id: int,
                          db: Session = Depends(get_db),
                          current_user: UserBase = Depends(get_current_user)):
-    return db_advertisement.delete_advertisement(db,id)
+    return db_advertisement.delete_advertisement(db,id,current_user.id)
 
