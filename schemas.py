@@ -1,10 +1,33 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr ,field_validator
+import re
 
 class UserBase(BaseModel):
     username: str
-    email: str
+    email: EmailStr 
     password: str
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v):
+        if not re.match(r'^[a-zA-Z0-9_-]{3,30}$', v):
+            raise ValueError('Username must be 3-30 characters and only contain letters, numbers, - or _')
+        return v
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search(r'[0-9]', v):
+            raise ValueError('Password must contain at least one digit')
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+            raise ValueError('Password must contain at least one special character')
+        return v
 
 class UserDisplay(BaseModel):
     username: str
