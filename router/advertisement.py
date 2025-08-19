@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header, Cookie, Form
 from fastapi.responses import Response, HTMLResponse, PlainTextResponse
 from typing import Optional, List
 from schemas import AdvertisementDisplay,AdvertisementBase
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends,status
 from sqlalchemy.orm import Session
 from db.database import get_db
 from db import db_advertisement
@@ -10,8 +10,8 @@ from schemas import UserBase
 from auth.oauth2 import get_current_user
 
 router = APIRouter(
-    prefix='/advertisement',
-    tags=['advertisement']
+    prefix='/advertisements',
+    tags=['advertisements']
 )
 
 
@@ -19,7 +19,8 @@ router = APIRouter(
              response_model=AdvertisementDisplay,
              summary='Create an advertisement',
              description=' This API call create a new advertisement',
-             response_description='Advertisement information'
+             response_description='Advertisement information',
+             status_code=status.HTTP_201_CREATED
              )
 def create_advertisement(request: AdvertisementBase = Depends(AdvertisementBase.as_form),
                          db: Session = Depends(get_db),
@@ -31,7 +32,9 @@ def create_advertisement(request: AdvertisementBase = Depends(AdvertisementBase.
             response_model=AdvertisementDisplay,
             summary='View advertisement details',
             description=' This API call view the details of a specified advertisement by ID',
-            response_description='Advertisement information'
+            response_description='Advertisement information',
+            status_code=status.HTTP_201_CREATED
+
             )
 def get_advertisement(id: int,
                       db: Session = Depends(get_db),
@@ -42,7 +45,8 @@ def get_advertisement(id: int,
 @router.put('/update/{id}',
              summary='Update advertisement',
              description=' This API call update a specified advertisement by ID',
-             response_description='Indicates whether the update was successfully completed.'
+             response_description='Indicates whether the update was successfully completed.',
+             status_code=status.HTTP_200_OK
              )
 def update_advertisement(id:int,
                          request: AdvertisementBase = Depends(AdvertisementBase.as_form),
@@ -54,7 +58,8 @@ def update_advertisement(id:int,
 @router.delete('/delete/{id}',
                summary='Delete advertisement',
                description=' This API call delete a specified advertisement by ID',
-               response_description='Indicates whether the deletion was successfully completed.'
+               response_description='Indicates whether the deletion was successfully completed.',
+               status_code=status.HTTP_204_NO_CONTENT
                )
 def delete_advertisement(id: int,
                          db: Session = Depends(get_db),

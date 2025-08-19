@@ -20,11 +20,11 @@ class DbUser(Base):
 
 class DbAdvertisement(Base):
     __tablename__ = 'advertisement'
+    id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(String)
     category = Column(String)
     is_reserved = Column(Boolean)
     is_sold = Column(Boolean)
-    id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer,ForeignKey('users.id'))
     user = relationship("DbUser", back_populates='adv_posts')
