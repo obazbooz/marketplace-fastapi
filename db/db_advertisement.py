@@ -2,8 +2,7 @@ from fastapi import HTTPException,status,Depends
 from sqlalchemy.orm.session import Session
 from schemas import AdvertisementBase
 from db.models import DbAdvertisement
-from schemas import UserBase
-from auth.oauth2 import get_current_user
+
 
 
 def create_advertisement(db: Session ,
@@ -12,9 +11,10 @@ def create_advertisement(db: Session ,
             title= request.title,
             description= request.description,
             category= request.category,
-            is_reserved = request.is_reserved,
-            is_sold = request.is_sold,
-            owner_id = owner_id
+            status=request.status,
+            owner_id = owner_id,
+            price=request.price,
+            location=request.location
         )
         db.add(new_advertisement)
         # send operation to DB
