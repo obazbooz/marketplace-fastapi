@@ -1,6 +1,3 @@
-from fastapi import APIRouter, Depends, Header, Cookie, Form
-from fastapi.responses import Response, HTMLResponse, PlainTextResponse
-from typing import Optional, List
 from schemas import AdvertisementDisplay,AdvertisementBase
 from fastapi import APIRouter,Depends,status
 from sqlalchemy.orm import Session

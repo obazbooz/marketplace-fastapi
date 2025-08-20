@@ -1,7 +1,12 @@
-from typing import List
-from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter
+from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecimal
 from fastapi import Form,HTTPException, status
+from decimal import Decimal
+from pydantic import BaseModel
+from typing import Optional
+from fastapi import Form
+from db.models import AdvStatus
 import re
+
 _email_adapter = TypeAdapter(EmailStr)  # reuse across validations
 
 class UserBase(BaseModel):
@@ -72,23 +77,30 @@ class AdvertisementBase(BaseModel):
     title: str
     description: str
     category: str
-    is_reserved: bool
-    is_sold: bool
+    status: AdvStatus = AdvStatus.AVAILABLE
+    price: Optional[Decimal]
+    location: Optional[str]
     @classmethod
     def as_form(
         cls,
         title: str = Form(..., description="Advertisement title"),
         description: str = Form(..., description="Detailed description"),
         category: str = Form(..., description="Category (e.g., Cars, Electronics)"),
-        is_reserved: bool = Form(False, description="Mark as reserved"),
-        is_sold: bool = Form(False, description="Mark as sold"),
+        status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
+        price: Optional[Decimal] = Form(..., description="Price"),
+        location: Optional[str] = Form(..., description="City/area"),
+
     ):
         return cls(
             title=title,
             description=description,
             category=category,
-            is_reserved=is_reserved,
-            is_sold=is_sold,
+            status=status,
+            # is_reserved=is_reserved,
+            # is_sold=is_sold,
+            # is_available = is_available,
+            price=price,
+            location=location,
         )
 
 class UserDisplay(BaseModel):
@@ -105,6 +117,9 @@ class AdvertisementDisplay(BaseModel):
     title: str
     description: str
     category: str
-    is_reserved: bool
-    is_sold: bool
+    status:AdvStatus
     owner_id: int
+    price: Optional[Decimal] = None
+    location: Optional[str] = None
+    class Config:
+        from_attributes = True

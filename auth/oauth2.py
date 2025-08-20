@@ -34,6 +34,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 # this function will retrive the current user that the token is attached to
 # We will verify the token to make sure that we are authenticated
+# Extracts the user info from the JWT token
 def get_current_user (token: str = Depends(oauth2_scheme),
                       db:Session = Depends(get_db)
                       ):
