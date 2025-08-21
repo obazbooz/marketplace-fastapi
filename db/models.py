@@ -34,7 +34,7 @@ class DbAdvertisement(Base):
     status = Column(
         SAEnum(AdvStatus, name="adv_status"),
         nullable=False,
-        server_default=AdvStatus.AVAILABLE.value,
+        default=AdvStatus.AVAILABLE,
         index=True,
     )
 
