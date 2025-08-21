@@ -25,7 +25,6 @@ def create_user(db: Session, request: UserBase):
 def get_all_users(db: Session):
     return db.query(DbUser).all()
 
-
 #Read one user
 def get_user(db:Session, id: int):
     user = db.query(DbUser).filter(DbUser.id == id).first()
@@ -57,9 +56,6 @@ def update_user(db:Session, id: int, request: UserBase):
     )
     db.commit()
     return "Update successful!"
-
-
-
 
 #Delete a user
 def delete_user(db:Session, id: int):

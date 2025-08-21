@@ -52,6 +52,19 @@ def update_advertisement(id:int,
     return db_advertisement.update_advertisement(db,id,request, current_user.id)
 
 
+@router.patch('/status-update/{id}',
+             summary='Update advertisement status',
+             description=' This API call update a specified advertisement status',
+             response_description='Indicates whether the status update was successfully completed.',
+             status_code=status.HTTP_200_OK
+             )
+def update_advertisement(id:int,
+                         request: AdvertisementBase = Depends(AdvertisementBase.as_form),
+                         db: Session = Depends(get_db),
+                         current_user: UserBase = Depends(get_current_user)):
+    return db_advertisement.update_advertisement(db,id,request, current_user.id)
+
+
 @router.delete('/delete/{id}',
                summary='Delete advertisement',
                description=' This API call delete a specified advertisement by ID',
