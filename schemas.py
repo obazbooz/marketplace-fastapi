@@ -70,14 +70,12 @@ class UserBase(BaseModel):
         # Note: Swagger won't mask this field like a password box unless you use OAuth2PasswordRequestForm.
         return cls(username=username, email=email, password=password)
 
-
-
 # Datatype
 class AdvertisementBase(BaseModel):
     title: str
     description: str
     category: str
-    status: AdvStatus = AdvStatus.AVAILABLE
+    # status: AdvStatus = AdvStatus.AVAILABLE
     price: Optional[Decimal]
     location: Optional[str]
     @classmethod
@@ -86,7 +84,7 @@ class AdvertisementBase(BaseModel):
         title: str = Form(..., description="Advertisement title"),
         description: str = Form(..., description="Detailed description"),
         category: str = Form(..., description="Category (e.g., Cars, Electronics)"),
-        status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
+        # status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
         price: Optional[Decimal] = Form(..., description="Price"),
         location: Optional[str] = Form(..., description="City/area"),
 
@@ -95,12 +93,23 @@ class AdvertisementBase(BaseModel):
             title=title,
             description=description,
             category=category,
-            status=status,
+            # status=status,
             # is_reserved=is_reserved,
             # is_sold=is_sold,
             # is_available = is_available,
             price=price,
             location=location,
+        )
+
+class AdvertisementStatusBase(BaseModel):
+    status: AdvStatus = AdvStatus.AVAILABLE
+    @classmethod
+    def as_form(
+        cls,
+        status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)")
+    ):
+        return cls(
+            status=status,
         )
 
 class UserDisplay(BaseModel):
