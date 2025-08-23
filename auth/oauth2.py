@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 #jwt is a json web token
 from jose import jwt
 from jose.exceptions import JWTError
-from fastapi import APIRouter,HTTPException,status, Depends
+from fastapi import HTTPException,status, Depends
 from sqlalchemy.orm import Session
 from db.database import get_db
 from db import db_user
