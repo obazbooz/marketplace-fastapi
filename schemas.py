@@ -2,7 +2,7 @@ from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecima
 from fastapi import Form,HTTPException, status
 from decimal import Decimal
 from typing import Optional
-from db.models import AdvStatus
+from db.models import AdvStatus,RatingScore
 from datetime import datetime
 import re
 
@@ -128,6 +128,31 @@ class MessageBase(BaseModel):
             content=content
         )
 
+class TransactionBase(BaseModel):
+    advertisement_id: int
+    buyer_id: int
+    @classmethod
+    def as_form(
+            cls,
+            advertisement_id:int = Form(...),
+            buyer_id: int = Form(...),
+    ):
+        return cls(advertisement_id=advertisement_id,buyer_id=buyer_id)
+
+class RatingBase(BaseModel):
+    transaction_id : int
+    score: RatingScore
+    @classmethod
+    def as_form(
+            cls,
+            transaction_id: int = Form(...),
+            score: RatingScore = Form(..., description='1 - 5 stars')
+    ):
+        return cls(
+            transaction_id=transaction_id,
+            score=score
+        )
+
 class UserDisplay(BaseModel):
     id: int
     username: str
@@ -149,7 +174,6 @@ class AdvertisementDisplay(BaseModel):
     class Config:
         from_attributes = True
 
-
 class MessageDisplay(BaseModel):
     id: int
     sender_id: int
@@ -158,5 +182,24 @@ class MessageDisplay(BaseModel):
     content: str
     created_at: datetime
 
+    class Config:
+        from_attributes = True
+
+class TransactionDisplay(BaseModel):
+    id : int
+    advertisement_id : int
+    buyer_id : int
+    seller_id : int
+    created_at : datetime
+    class Config:
+        from_attributes = True
+
+class RatingDisplay(BaseModel):
+    id: int
+    transaction_id: int
+    rater_id: int
+    ratee_id: int
+    score: RatingScore
+    created_at: datetime
     class Config:
         from_attributes = True
