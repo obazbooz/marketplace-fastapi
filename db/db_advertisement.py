@@ -1,9 +1,8 @@
 from fastapi import HTTPException,status,Depends
 from sqlalchemy.orm.session import Session
-from schemas import AdvertisementBase
+from schemas import AdvertisementBase,AdvertisementStatusBase
 from db.models import DbAdvertisement
-from schemas import UserBase
-from auth.oauth2 import get_current_user
+
 
 
 def create_advertisement(db: Session ,
@@ -12,9 +11,10 @@ def create_advertisement(db: Session ,
             title= request.title,
             description= request.description,
             category= request.category,
-            is_reserved = request.is_reserved,
-            is_sold = request.is_sold,
-            owner_id = owner_id
+            # status=request.status,
+            owner_id = owner_id,
+            price=request.price,
+            location=request.location
         )
         db.add(new_advertisement)
         # send operation to DB
@@ -50,14 +50,34 @@ def update_advertisement(db: Session, id: int , request: AdvertisementBase, curr
             DbAdvertisement.title : request.title,
             DbAdvertisement.description: request.description,
             DbAdvertisement.category: request.category,
-            DbAdvertisement.is_reserved: request.is_reserved,
-            DbAdvertisement.is_sold: request.is_sold,
+            DbAdvertisement.price: request.price,
+            DbAdvertisement.location: request.location
         }
     )
     # send operation to DB
     db.commit()
     return "Update successful"
 
+def update_advertisement_status(db: Session, id: int , request: AdvertisementStatusBase, current_user_id: int):
+    advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id)
+
+    if not advertisement.first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Advertisement with the ID {id} is not found')
+
+    if advertisement.first().owner_id != current_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You are not allowed to update this advertisement")
+
+    advertisement.update(
+        {
+            DbAdvertisement.status : request.status
+        }
+    )
+    # send operation to DB
+    db.commit()
+    return "Update successful"
 
 def delete_advertisement(db: Session, id: int, current_user_id: int):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()

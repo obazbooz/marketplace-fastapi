@@ -1,12 +1,8 @@
-from fastapi import APIRouter, Depends, Header, Cookie, Form
-from fastapi.responses import Response, HTMLResponse, PlainTextResponse
-from typing import Optional, List
-from schemas import AdvertisementDisplay,AdvertisementBase
+from schemas import AdvertisementDisplay,AdvertisementBase,AdvertisementStatusBase, UserBase
 from fastapi import APIRouter,Depends,status
 from sqlalchemy.orm import Session
 from db.database import get_db
 from db import db_advertisement
-from schemas import UserBase
 from auth.oauth2 import get_current_user
 
 router = APIRouter(
@@ -53,6 +49,19 @@ def update_advertisement(id:int,
                          db: Session = Depends(get_db),
                          current_user: UserBase = Depends(get_current_user)):
     return db_advertisement.update_advertisement(db,id,request, current_user.id)
+
+
+@router.patch('/{id}/status',
+             summary='Update advertisement status',
+             description=' This API call update a specified advertisement status',
+             response_description='Indicates whether the status update was successfully completed.',
+             status_code=status.HTTP_200_OK
+             )
+def update_advertisement_status(id:int,
+                         request: AdvertisementStatusBase = Depends(AdvertisementStatusBase.as_form),
+                         db: Session = Depends(get_db),
+                         current_user: UserBase = Depends(get_current_user)):
+    return db_advertisement.update_advertisement_status(db,id,request, current_user.id)
 
 
 @router.delete('/delete/{id}',
