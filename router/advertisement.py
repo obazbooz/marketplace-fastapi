@@ -1,14 +1,38 @@
 from schemas import AdvertisementDisplay,AdvertisementBase,AdvertisementStatusBase, UserBase
-from fastapi import APIRouter,Depends,status
+from fastapi import APIRouter,Depends,status,Query
 from sqlalchemy.orm import Session
 from db.database import get_db
 from db import db_advertisement
 from auth.oauth2 import get_current_user
+from typing import List,Annotated
+
 
 router = APIRouter(
     prefix='/advertisements',
     tags=['advertisements']
 )
+
+
+@router.get("",
+            response_model=List[AdvertisementDisplay],
+            summary = 'Get ranked advertisements based on recency and ratings',
+            description = ' This API call gets a list of ranked advertisements',
+            response_description = 'List of ranked advertisement',
+            status_code = status.HTTP_200_OK)
+
+#Query, Path, Body, etc. no longer accept ge=, le=, etc. directly.
+#Instead you use Annotated with Field.
+
+def get_advertisements (
+                        db: Session = Depends(get_db),
+                        current_user: UserBase = Depends(get_current_user),
+                        limit: Annotated[int, Query( ge=1, le=100)] = 20,
+                        offset: Annotated[int, Query(ge=0)] = 0
+):
+
+    return db_advertisement.get_ranked_advertisements(db,limit , offset)
+
+
 
 
 @router.post('/new',
@@ -74,4 +98,5 @@ def delete_advertisement(id: int,
                          db: Session = Depends(get_db),
                          current_user: UserBase = Depends(get_current_user)):
     return db_advertisement.delete_advertisement(db,id,current_user.id)
+
 

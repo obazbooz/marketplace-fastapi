@@ -171,6 +171,7 @@ class AdvertisementDisplay(BaseModel):
     owner_id: int
     price: Optional[Decimal] = None
     location: Optional[str] = None
+    created_at: datetime
     class Config:
         from_attributes = True
 

@@ -1,7 +1,8 @@
 from fastapi import HTTPException,status,Depends
 from sqlalchemy.orm.session import Session
 from schemas import AdvertisementBase,AdvertisementStatusBase
-from db.models import DbAdvertisement
+from db.models import DbAdvertisement, DbUser
+from sqlalchemy import desc, func
 
 
 
@@ -96,3 +97,14 @@ def delete_advertisement(db: Session, id: int, current_user_id: int):
     # send operation to DB
     db.commit()
     return "Delete successful"
+
+
+def get_ranked_advertisements(db: Session, limit : int = 20 , offset : int = 0):
+    ranked_advertisements = ((db.query(DbAdvertisement)
+                             .join(DbUser, DbUser.id == DbAdvertisement.owner_id))
+                             .order_by(
+        desc(func.coalesce(DbUser.rating_avg, 0.0)),
+        desc(func.coalesce(DbUser.rating_count, 0)),
+        desc(DbAdvertisement.created_at))
+    )
+    return ranked_advertisements.limit(limit).offset(offset).all()
