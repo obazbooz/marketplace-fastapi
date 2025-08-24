@@ -1,10 +1,9 @@
 from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecimal
 from fastapi import Form,HTTPException, status
 from decimal import Decimal
-from pydantic import BaseModel
 from typing import Optional
-from fastapi import Form
 from db.models import AdvStatus
+from datetime import datetime
 import re
 
 _email_adapter = TypeAdapter(EmailStr)  # reuse across validations
@@ -70,7 +69,6 @@ class UserBase(BaseModel):
         # Note: Swagger won't mask this field like a password box unless you use OAuth2PasswordRequestForm.
         return cls(username=username, email=email, password=password)
 
-# Datatype
 class AdvertisementBase(BaseModel):
     title: str
     description: str
@@ -112,6 +110,24 @@ class AdvertisementStatusBase(BaseModel):
             status=status,
         )
 
+class MessageBase(BaseModel):
+    receiver_id : int
+    advertisement_id : int
+    content : str
+
+    @classmethod
+    def as_form(
+            cls,
+            receiver_id: int = Form(...),
+            advertisement_id: int = Form(...),
+            content: str = Form(...),
+                ):
+        return cls(
+            receiver_id=receiver_id,
+            advertisement_id=advertisement_id,
+            content=content
+        )
+
 class UserDisplay(BaseModel):
     id: int
     username: str
@@ -130,5 +146,17 @@ class AdvertisementDisplay(BaseModel):
     owner_id: int
     price: Optional[Decimal] = None
     location: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+
+class MessageDisplay(BaseModel):
+    id: int
+    sender_id: int
+    receiver_id: int
+    advertisement_id: int
+    content: str
+    created_at: datetime
+
     class Config:
         from_attributes = True
