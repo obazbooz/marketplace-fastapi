@@ -8,6 +8,7 @@ from sqlalchemy import Enum as SAEnum
 from enum import Enum
 from sqlalchemy import UniqueConstraint , CheckConstraint
 
+
 #Pydantic model.
 
 class DbUser(Base):

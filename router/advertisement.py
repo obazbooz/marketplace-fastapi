@@ -1,4 +1,4 @@
-from schemas import AdvertisementDisplay,AdvertisementBase,AdvertisementStatusBase, UserBase
+from schemas import AdvertisementDisplay,AdvertisementBase,AdvertisementStatusBase, UserBase, SearchFilterBase
 from fastapi import APIRouter,Depends,status,Query
 from sqlalchemy.orm import Session
 from db.database import get_db
@@ -100,3 +100,23 @@ def delete_advertisement(id: int,
     return db_advertisement.delete_advertisement(db,id,current_user.id)
 
 
+
+@router.post(
+    "/search",
+    response_model=List[AdvertisementDisplay],
+    summary="Search ads by title/category/date (newer days first; ratings break ties)",
+    status_code=status.HTTP_200_OK,
+)
+def search_advertisements(
+    request: SearchFilterBase = Depends(SearchFilterBase.as_form),  # form body
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    db: Session = Depends(get_db),
+    current_user: UserBase = Depends(get_current_user),
+):
+    return db_advertisement.search_filter_advertisements(
+        db,
+        request,
+        limit=limit,
+        offset=offset,
+    )

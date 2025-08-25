@@ -1,10 +1,15 @@
-from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecimal
+from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecimal , field_validator, ValidationInfo
 from fastapi import Form,HTTPException, status
 from decimal import Decimal
 from typing import Optional
 from db.models import AdvStatus,RatingScore
-from datetime import datetime
+from datetime import datetime , date
 import re
+from pydantic import BaseModel, model_validator  # or field_validator, ValidationInfo
+from fastapi import Form
+from datetime import date
+
+#Pydantic schema
 
 _email_adapter = TypeAdapter(EmailStr)  # reuse across validations
 
@@ -153,6 +158,36 @@ class RatingBase(BaseModel):
             score=score
         )
 
+class SearchFilterBase(BaseModel):
+    title: str
+    category: str
+    start_date: Optional[date] = None
+    end_date:Optional[date] = None
+
+    # @field_validator("end_date")
+    # @classmethod
+    # def _end_on_or_after_start(cls, end: Optional[date], info: ValidationInfo):
+    #     start = info.data.get("start_date")   # ✅ use info.data, not info.get
+    #     if start and end and end < start:
+    #         raise ValueError("end_date must be on or after start_date")
+    #     return end
+
+    @classmethod
+    def as_form(
+            cls,
+            title: str = Form(..., description="Search words contained in the title (case-insensitive)"),
+            category: str = Form(..., description="Category (Exact category"),
+            start_date: Optional[date] = Form(..., description="YYYY-MM-DD"),
+            end_date: Optional[date] = Form(..., description="YYYY-MM-DD"),
+
+    ):
+        return cls(
+            title=title,
+            category=category,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
 class UserDisplay(BaseModel):
     id: int
     username: str
@@ -204,3 +239,5 @@ class RatingDisplay(BaseModel):
     created_at: datetime
     class Config:
         from_attributes = True
+
+
