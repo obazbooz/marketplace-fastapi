@@ -1,4 +1,4 @@
-from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecimal , field_validator, ValidationInfo
+from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,ConfigDict , field_validator, ValidationInfo
 from fastapi import Form,HTTPException, status
 from decimal import Decimal
 from typing import Optional
@@ -194,8 +194,7 @@ class UserDisplay(BaseModel):
     email: str
     # items: List[Article] = []
     # convert from datebase type in models into our user display automaticly
-    class Config():
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AdvertisementDisplay(BaseModel):
     id: int
@@ -207,8 +206,7 @@ class AdvertisementDisplay(BaseModel):
     price: Optional[Decimal] = None
     location: Optional[str] = None
     created_at: date
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MessageDisplay(BaseModel):
     id: int
@@ -217,9 +215,7 @@ class MessageDisplay(BaseModel):
     advertisement_id: int
     content: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionDisplay(BaseModel):
     id : int
@@ -227,8 +223,7 @@ class TransactionDisplay(BaseModel):
     buyer_id : int
     seller_id : int
     created_at : datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RatingDisplay(BaseModel):
     id: int
@@ -237,7 +232,6 @@ class RatingDisplay(BaseModel):
     ratee_id: int
     score: RatingScore
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
