@@ -16,8 +16,13 @@ def send_message (db: Session, request: MessageBase, sender_id:int):
         )
     if request.receiver_id != advertisement.owner_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail=f"The receiver ID {request.receiver_id} not belongs to the specified advertisement"
+        )
+    if request.receiver_id == sender_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You can't send message to your self"
         )
 
     new_message= DbMessage(

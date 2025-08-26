@@ -103,6 +103,7 @@ def delete_advertisement(db: Session, id: int, current_user_id: int):
 def get_ranked_advertisements(db: Session, limit : int = 20 , offset : int = 0):
     ranked_advertisements = ((db.query(DbAdvertisement)
                              .join(DbUser, DbUser.id == DbAdvertisement.owner_id))
+                             .filter(DbAdvertisement.status == AdvStatus.AVAILABLE)
                              .order_by(
         desc(DbAdvertisement.created_at),
         desc(func.coalesce(DbUser.rating_avg, 0.0)),

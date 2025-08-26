@@ -199,14 +199,14 @@ class UserDisplay(BaseModel):
 
 class AdvertisementDisplay(BaseModel):
     id: int
+    owner_id: int
     title: str
     description: str
     category: str
     status:AdvStatus
-    owner_id: int
     price: Optional[Decimal] = None
     location: Optional[str] = None
-    created_at: datetime
+    created_at: date
     class Config:
         from_attributes = True
 
