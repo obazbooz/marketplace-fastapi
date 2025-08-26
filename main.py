@@ -1,21 +1,20 @@
+# main.py
 from fastapi import FastAPI
 from db import models
 from db.database import engine
-from router import advertisement
-from auth import authentication
-from router import user
 
+from router.user import router as user_router
+from router.advertisement import router as advertisement_router
+from router.search_filter import router as search_filter_router
+from auth import authentication
 
 app = FastAPI(title="Marketplace API")
-app.include_router(user.router)
-app.include_router(advertisement.router)
+
+# register routers
+app.include_router(user_router)
+app.include_router(advertisement_router)
 app.include_router(authentication.router)
+app.include_router(search_filter_router)
 
-
-# @app.get("/")
-# def read_root():
-#     return {"status": "ok", "message": "Welcome to the Marketplace API"}
-
-
-#Create a database
-models.Base.metadata.create_all(engine)
+# create tables if not present
+models.Base.metadata.create_all(bind=engine)
