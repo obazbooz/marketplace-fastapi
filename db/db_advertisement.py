@@ -1,7 +1,10 @@
 from fastapi import HTTPException,status,Depends
 from sqlalchemy.orm.session import Session
-from schemas import AdvertisementBase,AdvertisementStatusBase
-from db.models import DbAdvertisement
+from schemas import AdvertisementBase,AdvertisementStatusBase , SearchFilterBase
+from db.models import DbAdvertisement, DbUser
+from sqlalchemy import desc, func
+from db.models import AdvStatus
+from typing import Optional, List
 
 
 
@@ -96,3 +99,40 @@ def delete_advertisement(db: Session, id: int, current_user_id: int):
     # send operation to DB
     db.commit()
     return "Delete successful"
+
+def get_ranked_advertisements(db: Session, limit : int = 20 , offset : int = 0):
+    ranked_advertisements = ((db.query(DbAdvertisement)
+                             .join(DbUser, DbUser.id == DbAdvertisement.owner_id))
+                             .filter(DbAdvertisement.status == AdvStatus.AVAILABLE)
+                             .order_by(
+        desc(DbAdvertisement.created_at),
+        desc(func.coalesce(DbUser.rating_avg, 0.0)),
+        desc(func.coalesce(DbUser.rating_count, 0))
+        )
+    )
+    return ranked_advertisements.limit(limit).offset(offset).all()
+
+def search_filter_advertisements(
+        db:Session,
+        request: SearchFilterBase,
+        limit : int = 20,
+        offset : int = 0
+):
+    search_filter_results = db.query(DbAdvertisement).join(DbUser, DbUser.id == DbAdvertisement.owner_id)
+    search_filter_results = search_filter_results.filter(DbAdvertisement.title.ilike(f"%{request.title}%"))
+    search_filter_results = search_filter_results.filter(DbAdvertisement.category == request.category)
+    search_filter_results=  search_filter_results.filter(DbAdvertisement.status == AdvStatus.AVAILABLE)
+
+    if request.start_date and request.end_date:
+        search_filter_results = search_filter_results.filter(func.date(DbAdvertisement.created_at).between(request.start_date, request.end_date))
+    elif request.start_date:
+        search_filter_results = search_filter_results.filter(func.date(DbAdvertisement.created_at) >= request.start_date)
+    elif request.end_date:
+        search_filter_results = search_filter_results.filter(func.date(DbAdvertisement.created_at) <= request.end_date)
+    search_filter_results = search_filter_results.order_by(
+        desc(DbAdvertisement.created_at),
+        desc(func.coalesce(DbUser.rating_avg, 0.0)),
+        desc(func.coalesce(DbUser.rating_count, 0))
+    )
+
+    return search_filter_results.limit(limit).offset(offset).all()
