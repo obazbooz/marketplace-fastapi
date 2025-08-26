@@ -1,0 +1,76 @@
+* 6641591 (HEAD -> advertisements-search, origin/back-up-advertisement-search, origin/advertisements-search) Search filter done!
+* 7cb4a94 (origin/advertisements-ranking) Fix message send restrictions
+* b591bbb Advertisement ranking done!
+*   2a88d0f (origin/features, features) Merge pull request #15 from obazbooz/user-transactions-rating
+|\  
+| * 3b8dfb1 (origin/user-transactions-rating) user rating done!
+|/  
+| *   6e7af16 (origin/develop) Merge pull request #14 from obazbooz/features
+| |\  
+| |/  
+|/|   
+* |   376b9c9 Merge pull request #13 from obazbooz/users-communication
+|\ \  
+| * | f88c5d8 (origin/users-communication) Conversation requirement done!
+|/ /  
+* |   f963cda Merge pull request #12 from obazbooz/ad-status-update
+|\ \  
+| * | 447a350 (origin/ad-status-update) Update status done
+| * | a6b8f27 Initial start with the end point
+|/ /  
+| | * b456105 (rating-feature) last update of transaction
+| | * 045303a After merge
+| | *   938240e After merge with features
+| | |\  
+| |_|/  
+|/| |   
+| | * 949a7d8 the name of file changed
+| | * 87f8c3d transaction update
+| | * be0fb0a Transction
+| |/  
+| | * fee8efe (origin/Search_filter) Merge pull request #11 from obazbooz/features
+| |/| 
+| |/  
+|/|   
+| | * 7a3b51c (origin/rating-feature) Merge pull request #10 from obazbooz/features
+| |/| 
+| |/  
+|/|   
+* |   7754fd2 (origin/FilterSearch) Merge pull request #9 from obazbooz/advertisement-image-upload
+|\ \  
+| |/  
+|/|   
+| * c3f0140 (origin/advertisement-image-upload) Updating the adv taple
+|/  
+*   48cb7b2 (develop) Merge pull request #7 from obazbooz/adding-validation-for-username-email-and-password
+|\  
+| * 1e2f01b (origin/adding-validation-for-username-email-and-password) Validation done
+|/  
+*   5b5a11b (origin/Filter_Search_Adv) Merge pull request #4 from obazbooz/Fixing-user-privileges
+|\  
+| * a746282 (origin/Fixing-user-privileges) sprint one reqirments
+| * 873bad8 Ignore local SQLite database file
+|/  
+| * 8ed5f61 (origin/amir) Merge pull request #5 from obazbooz/amir-1
+|/| 
+| * b4f7fad (origin/amir-1, amir-1) fixing the validator version
+| * 250baa3 Update modified files
+| * 99c4394 Initial commit with FastAPI project structure
+|/  
+*   127ca3e (amir) Merge pull request #3 from obazbooz/register-login
+|\  
+| * 78f092b (origin/register-login) Add auth to the reletive end points
+|/  
+*   47fa232 (origin/filter-search) Merge pull request #2 from obazbooz/advertisements-interactions
+|\  
+| * c1a8f18 (origin/advertisements-interactions) Update create adv url
+* | 8f0a2ab Merge pull request #1 from obazbooz/advertisements-interactions
+|\| 
+| | * 29126f8 (origin/main, origin/HEAD, main) Updating the welcome messages
+| | * 444156d nothing
+| |/  
+| * 726cd46 update the gitignore fle to ignore database files
+| * 07de90d changint the branching
+|/  
+* 6392d83 Initial FastAPI basecode
+* d1f8fa8 Initial commit
