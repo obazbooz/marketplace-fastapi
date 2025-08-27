@@ -16,6 +16,7 @@ class Base(DeclarativeBase):
     pass
 #this function to get the hall database
 #so we can perform operations any way in our code
+#Dependancy
 def get_db():
     db = SessionLocal()
     try:
