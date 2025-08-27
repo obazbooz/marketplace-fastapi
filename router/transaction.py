@@ -22,7 +22,7 @@ def create_transaction(request:TransactionBase = Depends(TransactionBase.as_form
                        current_user: UserBase = Depends(get_current_user)):
     return db_transaction.create_transaction(db , request,current_user.id)
 
-
+#default response status
 @router.get('/my',
            response_model=List[TransactionDisplay],
            status_code=status.HTTP_200_OK)

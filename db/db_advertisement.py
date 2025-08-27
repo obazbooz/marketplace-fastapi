@@ -8,8 +8,7 @@ from typing import Optional, List
 
 
 
-def create_advertisement(db: Session ,
-                         request: AdvertisementBase,owner_id: int):
+def create_advertisement(db: Session , request: AdvertisementBase,owner_id: int):
         new_advertisement = DbAdvertisement(
             title= request.title,
             description= request.description,
@@ -112,12 +111,7 @@ def get_ranked_advertisements(db: Session, limit : int = 20 , offset : int = 0):
     )
     return ranked_advertisements.limit(limit).offset(offset).all()
 
-def search_filter_advertisements(
-        db:Session,
-        request: SearchFilterBase,
-        limit : int = 20,
-        offset : int = 0
-):
+def search_filter_advertisements(db:Session, request: SearchFilterBase,limit : int = 20, offset : int = 0):
     search_filter_results = db.query(DbAdvertisement).join(DbUser, DbUser.id == DbAdvertisement.owner_id)
     search_filter_results = search_filter_results.filter(DbAdvertisement.title.ilike(f"%{request.title}%"))
     search_filter_results = search_filter_results.filter(DbAdvertisement.category == request.category)
