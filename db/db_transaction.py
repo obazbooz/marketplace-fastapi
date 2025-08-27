@@ -1,7 +1,6 @@
-from schemas import MessageBase, TransactionBase,RatingBase
-from db.models import DbMessage, DbTransaction, DbAdvertisement,AdvStatus
-from sqlalchemy import desc
-from fastapi import HTTPException,status
+from schemas import TransactionBase
+from db.models import DbTransaction, DbAdvertisement,AdvStatus
+from fastapi import HTTPException
 from sqlalchemy.orm.session import Session
 
 

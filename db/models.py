@@ -1,12 +1,10 @@
 from sqlalchemy.orm import relationship
 from db.database import Base
-from sqlalchemy import Column
-from sqlalchemy.sql.sqltypes import Integer, String, Boolean, Float, DateTime, Numeric , Date
+from sqlalchemy import Column,func, UniqueConstraint , CheckConstraint
+from sqlalchemy.sql.sqltypes import Integer, String, Float, DateTime, Numeric , Date
 from sqlalchemy.sql.schema import ForeignKey
-from sqlalchemy import func
 from sqlalchemy import Enum as SAEnum
 from enum import Enum
-from sqlalchemy import UniqueConstraint , CheckConstraint
 
 
 #Pydantic model.
@@ -22,10 +20,20 @@ class DbUser(Base):
     adv_posts = relationship('DbAdvertisement',back_populates='owner')
 
 
+class AdvCategory(str, Enum):
+    ELECTRONICS = "electronics"
+    BIKES = "bikes"
+    FASHION = "fashion"
+    HOME = "home"
+    VEHICLES = "vehicles"
+    SPORTS = "sports"
+    BOOKS = "books"
+
 class AdvStatus(str, Enum):
     AVAILABLE = "available"
     RESERVED = "reserved"
     SOLD = "sold"
+
 
 
 class DbAdvertisement(Base):
@@ -34,7 +42,11 @@ class DbAdvertisement(Base):
     owner_id = Column(Integer, ForeignKey('users.id'))
     title = Column(String)
     description = Column(String)
-    category = Column(String)
+    category = Column(
+        SAEnum(AdvCategory, name="adv_category"),
+        nullable=False,
+        index=True
+    )
     status = Column(
         SAEnum(AdvStatus, name="adv_status"),
         nullable=False,
@@ -46,9 +58,7 @@ class DbAdvertisement(Base):
     location = Column(String(120), nullable=True, index=True)
     image_path = Column(String, nullable=True)
     created_at = Column(Date, nullable=False, server_default= func.current_date(), index=True)
-    # updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
-    # reserved_at = Column(DateTime(timezone=True), nullable=True)
-    # sold_at = Column(DateTime(timezone=True), nullable=True)
+
 
 
 

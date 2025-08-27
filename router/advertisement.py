@@ -13,6 +13,8 @@ router = APIRouter(
 )
 
 
+
+
 @router.get("",
             response_model=List[AdvertisementDisplay],
             summary = 'Get ranked advertisements based on recency and ratings',
@@ -34,6 +36,7 @@ def get_advertisements (
 
 
 
+
 @router.post('/new',
              response_model=AdvertisementDisplay,
              summary='Create an advertisement',
@@ -47,6 +50,8 @@ def create_advertisement(request: AdvertisementBase = Depends(AdvertisementBase.
                          image: UploadFile | None = File(None)
                          ):
     return db_advertisement.create_advertisement(db, request ,current_user.id, image = image)
+
+
 
 
 @router.get('/{id}',
@@ -63,6 +68,8 @@ def get_advertisement(id: int,
     return db_advertisement.get_advertisement(db,id)
 
 
+
+
 @router.put('/update/{id}',
              summary='Update advertisement',
              description=' This API call update a specified advertisement by ID',
@@ -74,6 +81,9 @@ def update_advertisement(id:int,
                          db: Session = Depends(get_db),
                          current_user: UserBase = Depends(get_current_user)):
     return db_advertisement.update_advertisement(db,id,request, current_user.id)
+
+
+
 
 
 @router.patch('/{id}/status',
@@ -89,6 +99,10 @@ def update_advertisement_status(id:int,
     return db_advertisement.update_advertisement_status(db,id,request, current_user.id)
 
 
+
+
+
+
 @router.delete('/delete/{id}',
                summary='Delete advertisement',
                description=' This API call delete a specified advertisement by ID',
@@ -102,7 +116,10 @@ def delete_advertisement(id: int,
 
 
 
-@router.post(
+
+
+
+@router.get(
     "/search",
     response_model=List[AdvertisementDisplay],
     summary="Search ads by title/category/date (newer days first; ratings break ties)",
