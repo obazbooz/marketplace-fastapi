@@ -44,6 +44,7 @@ class DbAdvertisement(Base):
     owner = relationship("DbUser", back_populates='adv_posts')
     price = Column(Numeric(12, 2), nullable=True, index=True)
     location = Column(String(120), nullable=True, index=True)
+    image_path = Column(String, nullable=True)
     created_at = Column(Date, nullable=False, server_default= func.current_date(), index=True)
     # updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
     # reserved_at = Column(DateTime(timezone=True), nullable=True)

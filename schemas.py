@@ -81,6 +81,7 @@ class AdvertisementBase(BaseModel):
     # status: AdvStatus = AdvStatus.AVAILABLE
     price: Optional[Decimal]
     location: Optional[str]
+    image_path: Optional[str]
     @classmethod
     def as_form(
         cls,
@@ -90,7 +91,7 @@ class AdvertisementBase(BaseModel):
         # status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
         price: Optional[Decimal] = Form(..., description="Price"),
         location: Optional[str] = Form(..., description="City/area"),
-
+        image_path: Optional[str] = Form(...,description="Advertisement image (type: PNG/JPEG/WEBP)")
     ):
         return cls(
             title=title,
@@ -102,6 +103,7 @@ class AdvertisementBase(BaseModel):
             # is_available = is_available,
             price=price,
             location=location,
+            image_path=image_path
         )
 
 class AdvertisementStatusBase(BaseModel):
@@ -206,6 +208,7 @@ class AdvertisementDisplay(BaseModel):
     price: Optional[Decimal] = None
     location: Optional[str] = None
     created_at: date
+    image_path: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 class MessageDisplay(BaseModel):

@@ -1,14 +1,34 @@
-from fastapi import HTTPException,status,Depends
+from fastapi import HTTPException,status,Depends,UploadFile
 from sqlalchemy.orm.session import Session
 from schemas import AdvertisementBase,AdvertisementStatusBase , SearchFilterBase
 from db.models import DbAdvertisement, DbUser
 from sqlalchemy import desc, func
 from db.models import AdvStatus
 from typing import Optional, List
+import shutil
+from pathlib import Path
 
+UPLOAD_DIR = Path("files")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+def create_advertisement(db: Session , request: AdvertisementBase,owner_id: int, image: Optional[UploadFile] = None):
 
-def create_advertisement(db: Session , request: AdvertisementBase,owner_id: int):
+        def save_image(file: UploadFile) -> str:
+            # if no file uploaded, return None
+            if not file or not file.filename:
+                return None
+
+            # build a simple path under "files" folder
+            path = UPLOAD_DIR / file.filename
+
+            # open file and copy content to disk
+            with open(path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # return the relative path (so we can store in DB)
+            return str(path)
+
+        image_path = save_image(image) if image else None
         new_advertisement = DbAdvertisement(
             title= request.title,
             description= request.description,
@@ -16,7 +36,8 @@ def create_advertisement(db: Session , request: AdvertisementBase,owner_id: int)
             # status=request.status,
             owner_id = owner_id,
             price=request.price,
-            location=request.location
+            location=request.location,
+            image_path=image_path,
         )
         db.add(new_advertisement)
         # send operation to DB
