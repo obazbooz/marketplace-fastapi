@@ -166,13 +166,13 @@ class SearchFilterBase(BaseModel):
     start_date: Optional[date] = None
     end_date:Optional[date] = None
 
-    # @field_validator("end_date")
-    # @classmethod
-    # def _end_on_or_after_start(cls, end: Optional[date], info: ValidationInfo):
-    #     start = info.data.get("start_date")   # ✅ use info.data, not info.get
-    #     if start and end and end < start:
-    #         raise ValueError("end_date must be on or after start_date")
-    #     return end
+    @model_validator(mode="after")
+    def check_dates(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='end_date must be on or after start_date')
+        return self
 
     @classmethod
     def as_form(
