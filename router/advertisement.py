@@ -1,5 +1,5 @@
 from schemas import AdvertisementDisplay,AdvertisementBase,AdvertisementStatusBase, UserBase, SearchFilterBase
-from fastapi import APIRouter,Depends,status,Query
+from fastapi import APIRouter, Depends, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from db.database import get_db
 from db import db_advertisement
@@ -43,8 +43,10 @@ def get_advertisements (
              )
 def create_advertisement(request: AdvertisementBase = Depends(AdvertisementBase.as_form),
                          db: Session = Depends(get_db),
-                         current_user: UserBase = Depends(get_current_user)):
-    return db_advertisement.create_advertisement(db, request ,current_user.id)
+                         current_user: UserBase = Depends(get_current_user),
+                         image: UploadFile | None = File(None)
+                         ):
+    return db_advertisement.create_advertisement(db, request ,current_user.id, image = image)
 
 
 @router.get('/{id}',

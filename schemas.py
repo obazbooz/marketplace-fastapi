@@ -81,6 +81,7 @@ class AdvertisementBase(BaseModel):
     # status: AdvStatus = AdvStatus.AVAILABLE
     price: Optional[Decimal]
     location: Optional[str]
+    image_path: Optional[str]
     @classmethod
     def as_form(
         cls,
@@ -90,7 +91,7 @@ class AdvertisementBase(BaseModel):
         # status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
         price: Optional[Decimal] = Form(..., description="Price"),
         location: Optional[str] = Form(..., description="City/area"),
-
+        image_path: Optional[str] = Form(...,description="Advertisement image (type: PNG/JPEG/WEBP)")
     ):
         return cls(
             title=title,
@@ -102,6 +103,7 @@ class AdvertisementBase(BaseModel):
             # is_available = is_available,
             price=price,
             location=location,
+            image_path=image_path
         )
 
 class AdvertisementStatusBase(BaseModel):
@@ -164,13 +166,13 @@ class SearchFilterBase(BaseModel):
     start_date: Optional[date] = None
     end_date:Optional[date] = None
 
-    # @field_validator("end_date")
-    # @classmethod
-    # def _end_on_or_after_start(cls, end: Optional[date], info: ValidationInfo):
-    #     start = info.data.get("start_date")   # ✅ use info.data, not info.get
-    #     if start and end and end < start:
-    #         raise ValueError("end_date must be on or after start_date")
-    #     return end
+    @model_validator(mode="after")
+    def check_dates(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='end_date must be on or after start_date')
+        return self
 
     @classmethod
     def as_form(
@@ -206,6 +208,7 @@ class AdvertisementDisplay(BaseModel):
     price: Optional[Decimal] = None
     location: Optional[str] = None
     created_at: date
+    image_path: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 class MessageDisplay(BaseModel):

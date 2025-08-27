@@ -12,5 +12,6 @@ app.include_router(authentication.router)
 app.include_router(message.router)
 app.include_router(transaction.router)
 app.include_router(rating.router)
+
 #Create a database
 models.Base.metadata.create_all(engine)
