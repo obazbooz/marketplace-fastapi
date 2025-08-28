@@ -1,18 +1,44 @@
-from fastapi import HTTPException,status
+from fastapi import HTTPException,status,Depends,UploadFile
+from pyexpat.errors import messages
 from sqlalchemy.orm.session import Session
-from schemas import AdvertisementBase
-from db.models import DbAdvertisement
+from schemas import AdvertisementBase,AdvertisementStatusBase , SearchFilterBase
+from db.models import DbAdvertisement, DbUser
+from sqlalchemy import desc, func
+from db.models import AdvStatus
+from typing import Optional, List
+import shutil
+from pathlib import Path
 
+UPLOAD_DIR = Path("files")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-def create_advertisement(db: Session , request: AdvertisementBase):
+def create_advertisement(db: Session , request: AdvertisementBase,owner_id: int, image: Optional[UploadFile] = None):
+
+        def save_image(file: UploadFile):
+            # if no file uploaded, return None
+            if not file or not file.filename:
+                return None
+
+            # build a simple path under "files" folder
+            path = UPLOAD_DIR / file.filename
+
+            # open file and copy content to disk
+            with open(path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+
+            # return the relative path (so we can store in DB)
+            return str(path)
+
+        image_path = save_image(image) if image else None
         new_advertisement = DbAdvertisement(
             title= request.title,
             description= request.description,
             category= request.category,
-            id = request.id,
-            is_reserved = request.is_reserved,
-            is_sold = request.is_sold,
-            owner_id = request.owner_id
+            # status=request.status,
+            owner_id = owner_id,
+            price=request.price,
+            location=request.location,
+            image_path=image_path,
         )
         db.add(new_advertisement)
         # send operation to DB
@@ -22,35 +48,140 @@ def create_advertisement(db: Session , request: AdvertisementBase):
         return new_advertisement
 
 
-def update_advertisement(db: Session, id: int , request: AdvertisementBase):
+def get_advertisement(db: Session, id: int):
+    advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
+    if not advertisement:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'Advertisement with id {id} not found!')
+    #note if the raise get executed the rest of the code will not continue with
+    #we stop at the error handling section
+    return advertisement
+
+def update_advertisement(db: Session, id: int , request: AdvertisementBase, current_user_id: int, image: Optional[UploadFile] = None):
+
+    def save_image(file: UploadFile):
+        # if no file uploaded, return None
+        if not file or not file.filename:
+            return None
+
+        # build a simple path under "files" folder
+        path = UPLOAD_DIR / file.filename
+
+        # open file and copy content to disk
+        with open(path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # return the relative path (so we can store in DB)
+        return str(path)
+
+    image_path = save_image(image) if image else None
+
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id)
+
     if not advertisement.first():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Advertisement with the ID {id} is not found'
-                            )
+            detail=f'Advertisement with the ID {id} is not found')
+
+    if advertisement.first().owner_id != current_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You are not allowed to update this advertisement")
+
     advertisement.update(
         {
             DbAdvertisement.title : request.title,
             DbAdvertisement.description: request.description,
             DbAdvertisement.category: request.category,
-            DbAdvertisement.is_reserved: request.is_reserved,
-            DbAdvertisement.is_sold: request.is_sold,
+            DbAdvertisement.price: request.price,
+            DbAdvertisement.location: request.location,
+            DbAdvertisement.image_path: image_path,
         }
     )
     # send operation to DB
     db.commit()
     return "Update successful"
 
+def update_advertisement_status(db: Session, id: int , request: AdvertisementStatusBase, current_user_id: int):
+    advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id)
 
-def delete_advertisement(db: Session, id: int):
+    if not advertisement.first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f'Advertisement with the ID {id} is not found')
+
+    if advertisement.first().owner_id != current_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You are not allowed to update this advertisement")
+
+    advertisement.update(
+        {
+            DbAdvertisement.status : request.status
+        }
+    )
+    # send operation to DB
+    db.commit()
+    return "Update successful"
+
+def delete_advertisement(db: Session, id: int, current_user_id: int):
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id).first()
     if not advertisement:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'Advertisement with the ID {id} is not found'
-                            )
+            detail=f'Advertisement with the ID {id} is not found')
+
+    if advertisement.owner_id != current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to delete this advertisement"
+        )
+
     db.delete(advertisement)
     # send operation to DB
     db.commit()
     return "Delete successful"
+
+def get_ranked_advertisements(db: Session, limit : int = 20 , offset : int = 0):
+    ranked_advertisements = ((db.query(DbAdvertisement)
+                             .join(DbUser, DbUser.id == DbAdvertisement.owner_id))
+                             .filter(DbAdvertisement.status == AdvStatus.AVAILABLE)
+                             .order_by(
+        desc(DbAdvertisement.created_at),
+        desc(func.coalesce(DbUser.rating_avg, 0.0)),
+        desc(func.coalesce(DbUser.rating_count, 0))
+        )
+    )
+    results = ranked_advertisements.limit(limit).offset(offset).all()
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="No advertisements available!"
+        )
+    return ranked_advertisements.limit(limit).offset(offset).all()
+
+def search_filter_advertisements(db:Session, request: SearchFilterBase,limit : int = 20, offset : int = 0):
+    search_filter_results = db.query(DbAdvertisement).join(DbUser, DbUser.id == DbAdvertisement.owner_id)
+    search_filter_results = search_filter_results.filter(DbAdvertisement.title.ilike(f"%{request.title}%"))
+    search_filter_results = search_filter_results.filter(DbAdvertisement.category == request.category)
+    search_filter_results=  search_filter_results.filter(DbAdvertisement.status == AdvStatus.AVAILABLE)
+
+    if request.start_date and request.end_date:
+        search_filter_results = search_filter_results.filter(func.date(DbAdvertisement.created_at).between(request.start_date, request.end_date))
+    elif request.start_date:
+        search_filter_results = search_filter_results.filter(func.date(DbAdvertisement.created_at) >= request.start_date)
+    elif request.end_date:
+        search_filter_results = search_filter_results.filter(func.date(DbAdvertisement.created_at) <= request.end_date)
+    search_filter_results = search_filter_results.order_by(
+        desc(DbAdvertisement.created_at),
+        desc(func.coalesce(DbUser.rating_avg, 0.0)),
+        desc(func.coalesce(DbUser.rating_count, 0))
+    )
+
+    results = search_filter_results.limit(limit).offset(offset).all()
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="No advertisements available!"
+        )
+
+
+    return search_filter_results.limit(limit).offset(offset).all()
