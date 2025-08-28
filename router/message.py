@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends, status
 from schemas import UserBase,MessageBase,MessageDisplay
 from sqlalchemy.orm import Session
 from db.database import get_db
@@ -19,7 +19,8 @@ router = APIRouter(
              response_model= MessageDisplay,
              summary='Send a new message',
              description=' This API call sends a message from user to another user about product',
-             response_description='Message details'
+             response_description='Message details',
+             status_code=status.HTTP_201_CREATED,
              )
 def send_message(
         request :MessageBase = Depends(MessageBase.as_form),

@@ -1,4 +1,5 @@
 from fastapi import HTTPException,status,Depends,UploadFile
+from pyexpat.errors import messages
 from sqlalchemy.orm.session import Session
 from schemas import AdvertisementBase,AdvertisementStatusBase , SearchFilterBase
 from db.models import DbAdvertisement, DbUser
@@ -13,7 +14,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 def create_advertisement(db: Session , request: AdvertisementBase,owner_id: int, image: Optional[UploadFile] = None):
 
-        def save_image(file: UploadFile) -> str:
+        def save_image(file: UploadFile):
             # if no file uploaded, return None
             if not file or not file.filename:
                 return None
@@ -56,7 +57,25 @@ def get_advertisement(db: Session, id: int):
     #we stop at the error handling section
     return advertisement
 
-def update_advertisement(db: Session, id: int , request: AdvertisementBase, current_user_id: int):
+def update_advertisement(db: Session, id: int , request: AdvertisementBase, current_user_id: int, image: Optional[UploadFile] = None):
+
+    def save_image(file: UploadFile):
+        # if no file uploaded, return None
+        if not file or not file.filename:
+            return None
+
+        # build a simple path under "files" folder
+        path = UPLOAD_DIR / file.filename
+
+        # open file and copy content to disk
+        with open(path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # return the relative path (so we can store in DB)
+        return str(path)
+
+    image_path = save_image(image) if image else None
+
     advertisement = db.query(DbAdvertisement).filter(DbAdvertisement.id == id)
 
     if not advertisement.first():
@@ -74,7 +93,8 @@ def update_advertisement(db: Session, id: int , request: AdvertisementBase, curr
             DbAdvertisement.description: request.description,
             DbAdvertisement.category: request.category,
             DbAdvertisement.price: request.price,
-            DbAdvertisement.location: request.location
+            DbAdvertisement.location: request.location,
+            DbAdvertisement.image_path: image_path,
         }
     )
     # send operation to DB
@@ -130,6 +150,12 @@ def get_ranked_advertisements(db: Session, limit : int = 20 , offset : int = 0):
         desc(func.coalesce(DbUser.rating_count, 0))
         )
     )
+    results = ranked_advertisements.limit(limit).offset(offset).all()
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="No advertisements available!"
+        )
     return ranked_advertisements.limit(limit).offset(offset).all()
 
 def search_filter_advertisements(db:Session, request: SearchFilterBase,limit : int = 20, offset : int = 0):
@@ -149,5 +175,13 @@ def search_filter_advertisements(db:Session, request: SearchFilterBase,limit : i
         desc(func.coalesce(DbUser.rating_avg, 0.0)),
         desc(func.coalesce(DbUser.rating_count, 0))
     )
+
+    results = search_filter_results.limit(limit).offset(offset).all()
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="No advertisements available!"
+        )
+
 
     return search_filter_results.limit(limit).offset(offset).all()

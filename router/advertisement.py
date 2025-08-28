@@ -79,8 +79,9 @@ def get_advertisement(id: int,
 def update_advertisement(id:int,
                          request: AdvertisementBase = Depends(AdvertisementBase.as_form),
                          db: Session = Depends(get_db),
-                         current_user: UserBase = Depends(get_current_user)):
-    return db_advertisement.update_advertisement(db,id,request, current_user.id)
+                         current_user: UserBase = Depends(get_current_user),
+                         image: UploadFile | None = File(None)):
+    return db_advertisement.update_advertisement(db,id,request, current_user.id,image=image)
 
 
 
@@ -119,7 +120,7 @@ def delete_advertisement(id: int,
 
 
 
-@router.get(
+@router.post(
     "/search",
     response_model=List[AdvertisementDisplay],
     summary="Search ads by title/category/date (newer days first; ratings break ties)",
