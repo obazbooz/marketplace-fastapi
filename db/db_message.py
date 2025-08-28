@@ -1,7 +1,7 @@
 
 from schemas import MessageBase
 from db.models import DbMessage, DbAdvertisement, DbUser
-from sqlalchemy import desc
+from sqlalchemy import desc, and_, or_
 from fastapi import HTTPException,status
 from sqlalchemy.orm.session import Session
 
@@ -56,12 +56,45 @@ def send_message (db: Session, request: MessageBase, sender_id:int):
 
 
 def get_conversation(db: Session, user1_id: int, user2_id: int, advertisement_id:int):
-    conversation = db.query(DbMessage).filter(
-        ((DbMessage.sender_id == user1_id) & (DbMessage.receiver_id == user2_id) |
-         (DbMessage.sender_id == user2_id) & (DbMessage.receiver_id == user1_id)),DbMessage.advertisement_id == advertisement_id
-    ).order_by(desc(DbMessage.created_at)).all()
-    if not conversation:
+    ad = db.query(DbAdvertisement).get(advertisement_id)
+    if not ad:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'A converstaion with user ID {user2_id} and the advertisement ID {advertisement_id} not found!')
+                            detail=f"Advertisement with ID {advertisement_id} not found")
+
+    user1 = db.query(DbUser).get(user1_id)
+    if not user1:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with ID {user1_id} not found")
+
+    user2 = db.query(DbUser).get(user2_id)
+    if not user2:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with ID {user2_id} not found")
+
+    if user1_id == user2_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="user ID must be different from your ID")
+
+    conversation = (
+        db.query(DbMessage)
+        .filter(
+            and_(
+                DbMessage.advertisement_id == advertisement_id,
+                or_(
+                    and_(DbMessage.sender_id == user1_id, DbMessage.receiver_id == user2_id),
+                    and_(DbMessage.sender_id == user2_id, DbMessage.receiver_id == user1_id),
+                ),
+            )
+        )
+        .order_by(desc(DbMessage.created_at))
+        .all()
+    )
+
+    if not conversation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No conversation between user {user1_id} and user {user2_id} for advertisement {advertisement_id}"
+        )
+
     return conversation
 

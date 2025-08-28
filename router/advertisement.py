@@ -108,7 +108,7 @@ def update_advertisement_status(id:int,
                summary='Delete advertisement',
                description=' This API call delete a specified advertisement by ID',
                response_description='Indicates whether the deletion was successfully completed.',
-               status_code=status.HTTP_204_NO_CONTENT
+               status_code=status.HTTP_200_OK
                )
 def delete_advertisement(id: int,
                          db: Session = Depends(get_db),
