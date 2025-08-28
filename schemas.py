@@ -1,13 +1,10 @@
-from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,ConfigDict , field_validator, ValidationInfo
-from fastapi import Form,HTTPException, status
+from pydantic import  EmailStr ,TypeAdapter,ConfigDict , field_validator, BaseModel, model_validator # or field_validator, ValidationInfo
+from fastapi import HTTPException, status ,Form
 from decimal import Decimal
 from typing import Optional
-from db.models import AdvStatus,RatingScore
+from db.models import AdvStatus,RatingScore,AdvCategory
 from datetime import datetime , date
 import re
-from pydantic import BaseModel, model_validator  # or field_validator, ValidationInfo
-from fastapi import Form
-from datetime import date
 
 #Pydantic schema
 
@@ -36,7 +33,7 @@ class UserBase(BaseModel):
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid email. Expected format like: example@gmail.com')
+                detail='Invalid email, expected format like: example@gmail.com')
 
     @field_validator('password')
     @classmethod
@@ -74,37 +71,31 @@ class UserBase(BaseModel):
         # Note: Swagger won't mask this field like a password box unless you use OAuth2PasswordRequestForm.
         return cls(username=username, email=email, password=password)
 
+
 class AdvertisementBase(BaseModel):
     title: str
     description: str
-    category: str
-    # status: AdvStatus = AdvStatus.AVAILABLE
+    category: AdvCategory
     price: Optional[Decimal]
     location: Optional[str]
-    image_path: Optional[str]
     @classmethod
     def as_form(
         cls,
         title: str = Form(..., description="Advertisement title"),
         description: str = Form(..., description="Detailed description"),
-        category: str = Form(..., description="Category (e.g., Cars, Electronics)"),
-        # status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
+        category: AdvCategory = Form(..., description="Category (e.g., Cars, Electronics)"),
         price: Optional[Decimal] = Form(..., description="Price"),
         location: Optional[str] = Form(..., description="City/area"),
-        image_path: Optional[str] = Form(...,description="Advertisement image (type: PNG/JPEG/WEBP)")
     ):
         return cls(
             title=title,
             description=description,
             category=category,
-            # status=status,
-            # is_reserved=is_reserved,
-            # is_sold=is_sold,
-            # is_available = is_available,
             price=price,
             location=location,
-            image_path=image_path
+
         )
+
 
 class AdvertisementStatusBase(BaseModel):
     status: AdvStatus = AdvStatus.AVAILABLE
@@ -116,6 +107,7 @@ class AdvertisementStatusBase(BaseModel):
         return cls(
             status=status,
         )
+
 
 class MessageBase(BaseModel):
     receiver_id : int
@@ -135,6 +127,7 @@ class MessageBase(BaseModel):
             content=content
         )
 
+
 class TransactionBase(BaseModel):
     advertisement_id: int
     buyer_id: int
@@ -145,6 +138,7 @@ class TransactionBase(BaseModel):
             buyer_id: int = Form(...),
     ):
         return cls(advertisement_id=advertisement_id,buyer_id=buyer_id)
+
 
 class RatingBase(BaseModel):
     transaction_id : int
@@ -160,9 +154,10 @@ class RatingBase(BaseModel):
             score=score
         )
 
+
 class SearchFilterBase(BaseModel):
     title: str
-    category: str
+    category: AdvCategory
     start_date: Optional[date] = None
     end_date:Optional[date] = None
 
@@ -178,7 +173,7 @@ class SearchFilterBase(BaseModel):
     def as_form(
             cls,
             title: str = Form(..., description="Search words contained in the title (case-insensitive)"),
-            category: str = Form(..., description="Category (Exact category"),
+            category: AdvCategory = Form(..., description="Category (Exact category"),
             start_date: Optional[date] = Form(..., description="YYYY-MM-DD"),
             end_date: Optional[date] = Form(..., description="YYYY-MM-DD"),
 
@@ -190,6 +185,7 @@ class SearchFilterBase(BaseModel):
             end_date=end_date,
         )
 
+
 class UserDisplay(BaseModel):
     id: int
     username: str
@@ -198,18 +194,20 @@ class UserDisplay(BaseModel):
     # convert from datebase type in models into our user display automaticly
     model_config = ConfigDict(from_attributes=True)
 
+
 class AdvertisementDisplay(BaseModel):
     id: int
     owner_id: int
     title: str
     description: str
-    category: str
+    category: AdvCategory
     status:AdvStatus
     price: Optional[Decimal] = None
     location: Optional[str] = None
     created_at: date
     image_path: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
+
 
 class MessageDisplay(BaseModel):
     id: int
@@ -220,6 +218,7 @@ class MessageDisplay(BaseModel):
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
+
 class TransactionDisplay(BaseModel):
     id : int
     advertisement_id : int
@@ -227,6 +226,7 @@ class TransactionDisplay(BaseModel):
     seller_id : int
     created_at : datetime
     model_config = ConfigDict(from_attributes=True)
+
 
 class RatingDisplay(BaseModel):
     id: int

@@ -1,22 +1,25 @@
-from schemas import MessageBase, TransactionBase,RatingBase
-from db.models import DbMessage, DbTransaction, DbAdvertisement,AdvStatus
-from sqlalchemy import desc
-from fastapi import HTTPException,status
+from schemas import TransactionBase
+from db.models import DbTransaction, DbAdvertisement,AdvStatus, DbUser
+from fastapi import HTTPException, status
 from sqlalchemy.orm.session import Session
 
 
 def create_transaction(db:Session,request:TransactionBase, seller_id:int):
-    ad = db.query(DbAdvertisement).filter(DbAdvertisement.id == request.advertisement_id).first()
+    ad = db.query(DbAdvertisement).join(DbUser, DbUser.id == DbAdvertisement.owner_id).filter(DbAdvertisement.id == request.advertisement_id).first()
     if not ad:
-        raise HTTPException(status_code=404, detail="Advertisement not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Advertisement not found")
 
         # Seller must own the advertisement
     if ad.owner_id != seller_id:
-        raise HTTPException(status_code=403, detail="You are not the owner of this advertisement")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You are not the owner of this advertisement")
 
         # Ad must be available
     if ad.status != AdvStatus.AVAILABLE:
-        raise HTTPException(status_code=400, detail="Advertisement is not available for sale")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Advertisement is not available for sale")
+
+    buyer = db.query(DbUser).filter(DbUser.id == request.buyer_id).first()
+    if not buyer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Buyer not found")
 
     transaction = DbTransaction(
         advertisement_id = request.advertisement_id,
