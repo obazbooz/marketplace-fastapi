@@ -1,5 +1,3 @@
-from warnings import deprecated
-
 from passlib.context import CryptContext
 
 

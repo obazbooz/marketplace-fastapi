@@ -1,10 +1,12 @@
-from pydantic import BaseModel , EmailStr ,field_validator,TypeAdapter,condecimal
-from fastapi import Form,HTTPException, status
+from pydantic import  EmailStr ,TypeAdapter,ConfigDict , field_validator, BaseModel, model_validator # or field_validator, ValidationInfo
+from fastapi import HTTPException, status ,Form
 from decimal import Decimal
 from typing import Optional
-from db.models import AdvStatus
-from datetime import datetime
+from db.models import AdvStatus,RatingScore,AdvCategory
+from datetime import datetime , date
 import re
+
+#Pydantic schema
 
 _email_adapter = TypeAdapter(EmailStr)  # reuse across validations
 
@@ -31,7 +33,7 @@ class UserBase(BaseModel):
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Invalid email. Expected format like: example@gmail.com')
+                detail='Invalid email, expected format like: example@gmail.com')
 
     @field_validator('password')
     @classmethod
@@ -69,11 +71,11 @@ class UserBase(BaseModel):
         # Note: Swagger won't mask this field like a password box unless you use OAuth2PasswordRequestForm.
         return cls(username=username, email=email, password=password)
 
+
 class AdvertisementBase(BaseModel):
     title: str
     description: str
-    category: str
-    # status: AdvStatus = AdvStatus.AVAILABLE
+    category: AdvCategory
     price: Optional[Decimal]
     location: Optional[str]
     @classmethod
@@ -81,23 +83,19 @@ class AdvertisementBase(BaseModel):
         cls,
         title: str = Form(..., description="Advertisement title"),
         description: str = Form(..., description="Detailed description"),
-        category: str = Form(..., description="Category (e.g., Cars, Electronics)"),
-        # status: AdvStatus = Form(AdvStatus.AVAILABLE, description="Status (available, reserved, sold)"),
+        category: AdvCategory = Form(..., description="Category (e.g., Cars, Electronics)"),
         price: Optional[Decimal] = Form(..., description="Price"),
         location: Optional[str] = Form(..., description="City/area"),
-
     ):
         return cls(
             title=title,
             description=description,
             category=category,
-            # status=status,
-            # is_reserved=is_reserved,
-            # is_sold=is_sold,
-            # is_available = is_available,
             price=price,
             location=location,
+
         )
+
 
 class AdvertisementStatusBase(BaseModel):
     status: AdvStatus = AdvStatus.AVAILABLE
@@ -109,6 +107,7 @@ class AdvertisementStatusBase(BaseModel):
         return cls(
             status=status,
         )
+
 
 class MessageBase(BaseModel):
     receiver_id : int
@@ -128,26 +127,86 @@ class MessageBase(BaseModel):
             content=content
         )
 
+
+class TransactionBase(BaseModel):
+    advertisement_id: int
+    buyer_id: int
+    @classmethod
+    def as_form(
+            cls,
+            advertisement_id:int = Form(...),
+            buyer_id: int = Form(...),
+    ):
+        return cls(advertisement_id=advertisement_id,buyer_id=buyer_id)
+
+
+class RatingBase(BaseModel):
+    transaction_id : int
+    score: RatingScore
+    @classmethod
+    def as_form(
+            cls,
+            transaction_id: int = Form(...),
+            score: RatingScore = Form(..., description='1 - 5 stars')
+    ):
+        return cls(
+            transaction_id=transaction_id,
+            score=score
+        )
+
+
+class SearchFilterBase(BaseModel):
+    title: str
+    category: AdvCategory
+    start_date: Optional[date] = None
+    end_date:Optional[date] = None
+
+    @model_validator(mode="after")
+    def check_dates(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='end_date must be on or after start_date')
+        return self
+
+    @classmethod
+    def as_form(
+            cls,
+            title: str = Form(..., description="Search words contained in the title (case-insensitive)"),
+            category: AdvCategory = Form(..., description="Category (Exact category"),
+            start_date: Optional[date] = Form(..., description="YYYY-MM-DD"),
+            end_date: Optional[date] = Form(..., description="YYYY-MM-DD"),
+
+    ):
+        return cls(
+            title=title,
+            category=category,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+
 class UserDisplay(BaseModel):
     id: int
     username: str
     email: str
     # items: List[Article] = []
     # convert from datebase type in models into our user display automaticly
-    class Config():
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class AdvertisementDisplay(BaseModel):
     id: int
+    owner_id: int
     title: str
     description: str
-    category: str
+    category: AdvCategory
     status:AdvStatus
-    owner_id: int
     price: Optional[Decimal] = None
     location: Optional[str] = None
-    class Config:
-        from_attributes = True
+    created_at: date
+    image_path: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MessageDisplay(BaseModel):
@@ -157,6 +216,25 @@ class MessageDisplay(BaseModel):
     advertisement_id: int
     content: str
     created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+
+class TransactionDisplay(BaseModel):
+    id : int
+    advertisement_id : int
+    buyer_id : int
+    seller_id : int
+    created_at : datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RatingDisplay(BaseModel):
+    id: int
+    transaction_id: int
+    rater_id: int
+    ratee_id: int
+    score: RatingScore
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
